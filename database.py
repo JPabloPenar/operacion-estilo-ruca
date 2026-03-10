@@ -58,7 +58,8 @@ def registrar_puntos(nombre_equipo, descripcion, puntos):
 def obtener_totales():
     """Retorna los datos para el gráfico de Streamlit"""
     df = conn.read(worksheet="equipos")
-    # Retornamos formato lista de tuplas para mantener compatibilidad con tu app.py
+    # Limpiamos posibles valores nulos para evitar errores en el gráfico
+    df['puntos_totales'] = df['puntos_totales'].fillna(0)
     return list(df.itertuples(index=False, name=None))
 
 def obtener_historial_completo():
