@@ -1,69 +1,66 @@
-import sqlite3
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+import pandas as pd
+from datetime import datetime
+
+# Crear la conexión con Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 def inicializar_db():
-    conn = sqlite3.connect('competencia.db')
-    cursor = conn.cursor()
-    
-    # Tabla para los equipos y su puntaje total
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS equipos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT UNIQUE NOT NULL,
-            puntos_totales INTEGER DEFAULT 0
-        )
-    ''')
-    
-    # Tabla para el registro detallado (logs)
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS historial (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            equipo_id INTEGER,
-            descripcion TEXT NOT NULL,
-            puntos_cambio INTEGER NOT NULL,
-            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (equipo_id) REFERENCES equipos (id)
-        )
-    ''')
-    
-    # Insertar los 5 equipos iniciales si no existen
-    equipos = ['Escuderos', 'Templarios', 'Capes', 'Herederas', 'Adalies']
-    for equipo in equipos:
-        cursor.execute('INSERT OR IGNORE INTO equipos (nombre) VALUES (?)', (equipo,))
-    
-    conn.commit()
-    conn.close()
-
-def registrar_puntos(nombre_equipo, descripcion, puntos):
-    conn = sqlite3.connect('competencia.db')
-    cursor = conn.cursor()
+    """
+    En Google Sheets, la 'inicialización' consiste en asegurar que 
+    existan las pestañas y los equipos base.
+    """
+    try:
+        equipos = conn.read(worksheet="equipos")
+    except:
+        # Si la pestaña no existe, creamos los equipos iniciales
+        nombres = ['Escuderos', 'Templarios', 'Capes', 'Herederas', 'Adalies']
+        equipos = pd.DataFrame({
+            "nombre": nombres,
+            "puntos_totales": [0] * 5
+        })
+        conn.update(worksheet="equipos", data=equipos)
     
     try:
-        # 1. Registrar en el historial
-        cursor.execute('''
-            INSERT INTO historial (equipo_id, descripcion, puntos_cambio)
-            SELECT id, ?, ? FROM equipos WHERE nombre = ?
-        ''', (descripcion, puntos, nombre_equipo))
-        
-        # 2. Actualizar el total del equipo
-        cursor.execute('''
-            UPDATE equipos 
-            SET puntos_totales = puntos_totales + ? 
-            WHERE nombre = ?
-        ''', (puntos, nombre_equipo))
-        
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        print(f"Error: {e}")
-    finally:
-        conn.close()
+        conn.read(worksheet="historial")
+    except:
+        # Si el historial no existe, creamos una tabla vacía con columnas
+        historial = pd.DataFrame(columns=["equipo_nombre", "descripcion", "puntos_cambio", "fecha"])
+        conn.update(worksheet="historial", data=historial)
 
+def registrar_puntos(nombre_equipo, descripcion, puntos):
+    try:
+        # 1. Leer datos actuales
+        equipos = conn.read(worksheet="equipos")
+        historial = conn.read(worksheet="historial")
+
+        # 2. Actualizar el total del equipo
+        equipos.loc[equipos['nombre'] == nombre_equipo, 'puntos_totales'] += puntos
+        
+        # 3. Registrar en el historial
+        nuevo_log = pd.DataFrame([{
+            "equipo_nombre": nombre_equipo,
+            "descripcion": descripcion,
+            "puntos_cambio": puntos,
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }])
+        
+        historial_actualizado = pd.concat([historial, nuevo_log], ignore_index=True)
+
+        # 4. Guardar cambios en Google Sheets
+        conn.update(worksheet="equipos", data=equipos)
+        conn.update(worksheet="historial", data=historial_actualizado)
+        
+    except Exception as e:
+        st.error(f"Error al conectar con Google Sheets: {e}")
 
 def obtener_totales():
-    """Función extra para facilitar la lectura en Streamlit"""
-    conn = sqlite3.connect('competencia.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT nombre, puntos_totales FROM equipos")
-    datos = cursor.fetchall()
-    conn.close()
-    return datos
+    """Retorna los datos para el gráfico de Streamlit"""
+    df = conn.read(worksheet="equipos")
+    # Retornamos formato lista de tuplas para mantener compatibilidad con tu app.py
+    return list(df.itertuples(index=False, name=None))
+
+def obtener_historial_completo():
+    """Función nueva para ver todos los registros"""
+    return conn.read(worksheet="historial")
