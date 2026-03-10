@@ -27,7 +27,7 @@ st.title("🏆 Competencia: Operación Estilo Ruca")
 # --- SIDEBAR: REGISTRO ---
 with st.sidebar:
     st.header("Registrar Puntos")
-    equipo = st.selectbox("Equipo", ['Escuderos', 'Templarios', 'Vikingos', 'Espartanos', 'Samuráis'])
+    equipo = st.selectbox("Equipo", ['Escuderos', 'Templarios', 'Capes', 'Herederas', 'Adalies'])
     desc = st.text_input("Descripción del logro o falta")
     pts = st.number_input("Puntos a asignar", step=1, value=0)
     
