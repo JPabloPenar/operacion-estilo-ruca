@@ -61,28 +61,18 @@ if st.button("Limpiar todo el historial"):
     ejecutar_query("UPDATE equipos SET puntos_totales = 0", commit=True)
     st.rerun()
 
-with tab2:
-    st.subheader("📋 Historial de movimientos")
-    st.write("Aquí puedes verificar cuándo y por qué se sumaron puntos:")
+st.divider() # Una línea divisoria visual
+st.subheader("📋 Historial Completo de Registros")
+
+# Obtenemos todos los datos de la tabla historial
+# (Asegúrate de tener una función que haga este SELECT en database.py o úsala aquí)
+registros = ejecutar_query("SELECT equipo_nombre, descripcion, puntos_cambio FROM historial ORDER BY id DESC")
+
+if registros:
+    # Creamos un DataFrame para mostrarlo como una tabla limpia
+    df_historial = pd.DataFrame(registros, columns=["Equipo", "Descripción", "Puntos"])
     
-    # Obtenemos el historial desde database.py
-    df_hist = obtener_historial_completo()
-    
-    if not df_hist.empty:
-        # 1. Convertir la columna fecha a formato datetime (por si viene como texto)
-        df_hist['fecha'] = pd.to_datetime(df_hist['fecha'])
-        
-        # 2. Ordenar por fecha: la más reciente primero
-        df_hist = df_hist.sort_values(by='fecha', ascending=False)
-        
-        # 3. Formatear la fecha para que sea más legible (Día/Mes/Año Hora:Min)
-        df_hist['fecha_formateada'] = df_hist['fecha'].dt.strftime('%d/%m/%Y %H:%M')
-        
-        # 4. Seleccionar y renombrar columnas para una tabla limpia
-        df_mostrar = df_hist[['fecha_formateada', 'equipo_nombre', 'descripcion', 'puntos_cambio']].copy()
-        df_mostrar.columns = ['📅 Fecha', '🛡️ Equipo', '📝 Descripción', '🔢 Puntos']
-        
-        # Mostrar la tabla
-        st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
-    else:
-        st.info("Aún no hay registros en el historial.")
+    # Mostramos la tabla. 'use_container_width' hace que se vea bien en móviles
+    st.dataframe(df_historial, use_container_width=True)
+else:
+    st.info("Aún no hay registros de puntos.")
