@@ -35,25 +35,33 @@ def registrar_puntos(nombre_equipo, descripcion, puntos):
         equipos = conn.read(worksheet="equipos")
         historial = conn.read(worksheet="historial")
 
+        # Aseguramos que puntos_totales sea numérico (evita errores de suma)
+        equipos['puntos_totales'] = pd.to_numeric(equipos['puntos_totales']).fillna(0)
+
         # 2. Actualizar el total del equipo
         equipos.loc[equipos['nombre'] == nombre_equipo, 'puntos_totales'] += puntos
         
-        # 3. Registrar en el historial
+        # 3. Preparar el nuevo registro
         nuevo_log = pd.DataFrame([{
-            "equipo_nombre": nombre_equipo,
-            "descripcion": descripcion,
-            "puntos_cambio": puntos,
+            "equipo_nombre": str(nombre_equipo),
+            "descripcion": str(descripcion),
+            "puntos_cambio": int(puntos),
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }])
         
-        historial_actualizado = pd.concat([historial, nuevo_log], ignore_index=True)
+        # 4. Combinar con el historial existente
+        # Usamos 'ignore_index=True' y verificamos si historial está vacío
+        if historial.empty:
+            historial_actualizado = nuevo_log
+        else:
+            historial_actualizado = pd.concat([historial, nuevo_log], ignore_index=True)
 
-        # 4. Guardar cambios en Google Sheets
+        # 5. Guardar cambios en Google Sheets
         conn.update(worksheet="equipos", data=equipos)
         conn.update(worksheet="historial", data=historial_actualizado)
         
     except Exception as e:
-        st.error(f"Error al conectar con Google Sheets: {e}")
+        st.error(f"Error detallado: {e}")
 
 def obtener_totales():
     """Retorna los datos para el gráfico de Streamlit"""
