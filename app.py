@@ -48,20 +48,31 @@ if st.sidebar.button("Registrar"):
 # --- Visualización de Datos ---
 col1, col2 = st.columns([1, 1])
 
-with col1:
-    st.subheader("📊 Puntos Totales")
-    df_equipos = pd.DataFrame(ejecutar_query("SELECT nombre, puntos_totales FROM equipos"), 
-                              columns=["Equipo", "Puntos"])
-    st.bar_chart(df_equipos.set_index("Equipo"))
 
-with col2:
-    st.subheader("📜 Historial Reciente")
-    hist_data = ejecutar_query("SELECT equipo_nombre, descripcion, puntos_cambio FROM historial ORDER BY id DESC LIMIT 10")
-    df_hist = pd.DataFrame(hist_data, columns=["Equipo", "Motivo", "Puntos"])
-    st.table(df_hist)
+st.subheader("📊 Puntos Totales")
+df_equipos = pd.DataFrame(ejecutar_query("SELECT nombre, puntos_totales FROM equipos"), 
+                              columns=["Equipo", "Puntos"])
+st.bar_chart(df_equipos.set_index("Equipo"))
+
 
 # Botón para reiniciar (opcional)
 if st.button("Limpiar todo el historial"):
     ejecutar_query("DELETE FROM historial", commit=True)
     ejecutar_query("UPDATE equipos SET puntos_totales = 0", commit=True)
     st.rerun()
+
+st.divider() # Una línea divisoria visual
+st.subheader("📋 Historial Completo de Registros")
+
+# Obtenemos todos los datos de la tabla historial
+# (Asegúrate de tener una función que haga este SELECT en database.py o úsala aquí)
+registros = ejecutar_query("SELECT equipo_nombre, descripcion, puntos_cambio FROM historial ORDER BY id DESC")
+
+if registros:
+    # Creamos un DataFrame para mostrarlo como una tabla limpia
+    df_historial = pd.DataFrame(registros, columns=["Equipo", "Descripción", "Puntos"])
+    
+    # Mostramos la tabla. 'use_container_width' hace que se vea bien en móviles
+    st.dataframe(df_historial, use_container_width=True)
+else:
+    st.info("Aún no hay registros de puntos.")
