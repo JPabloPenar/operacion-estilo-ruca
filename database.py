@@ -1,82 +1,68 @@
-import streamlit as st
-from streamlit_gsheets import GSheetsConnection
-import pandas as pd
-from datetime import datetime
-
-# Definimos la URL de manera explícita para evitar el error 404
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1VTHKI7cL78RIdiGD43WEdIEYEhghNShJe3shMvqq1Xw/edit"
-
-# Crear la conexión especificando la URL directamente
-conn = st.connection("gsheets", type=GSheetsConnection)
+import sqlite3
 
 def inicializar_db():
-    """Asegura que existan las pestañas y los equipos base."""
-    try:
-        # Intentamos leer usando la URL explícita
-        equipos = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="equipos")
-    except Exception as e:
-        st.warning(f"Configurando pestaña 'equipos' por primera vez...")
-        nombres = ['Escuderos', 'Templarios', 'Capes', 'Herederas', 'Adalies']
-        equipos = pd.DataFrame({
-            "nombre": nombres,
-            "puntos_totales": [0] * 5
-        })
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="equipos", data=equipos)
+    conn = sqlite3.connect('competencia.db')
+    cursor = conn.cursor()
     
-    try:
-        conn.read(spreadsheet=SPREADSHEET_URL, worksheet="historial")
-    except Exception as e:
-        st.warning(f"Configurando pestaña 'historial' por primera vez...")
-        historial = pd.DataFrame(columns=["equipo_nombre", "descripcion", "puntos_cambio", "fecha"])
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="historial", data=historial)
+    # Tabla para los equipos y su puntaje total
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS equipos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT UNIQUE NOT NULL,
+            puntos_totales INTEGER DEFAULT 0
+        )
+    ''')
+    
+    # Tabla para el registro detallado (logs)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS historial (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            equipo_id INTEGER,
+            descripcion TEXT NOT NULL,
+            puntos_cambio INTEGER NOT NULL,
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (equipo_id) REFERENCES equipos (id)
+        )
+    ''')
+    
+    # Insertar los 5 equipos iniciales si no existen
+    equipos = ['Escuderos', 'Templarios', 'Vikingos', 'Espartanos', 'Samuráis']
+    for equipo in equipos:
+        cursor.execute('INSERT OR IGNORE INTO equipos (nombre) VALUES (?)', (equipo,))
+    
+    conn.commit()
+    conn.close()
 
 def registrar_puntos(nombre_equipo, descripcion, puntos):
+    conn = sqlite3.connect('competencia.db')
+    cursor = conn.cursor()
+    
     try:
-        # 1. Leer datos actuales especificando el spreadsheet
-        equipos = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="equipos")
-        historial = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="historial")
-
-        # Aseguramos que puntos_totales sea numérico
-        equipos['puntos_totales'] = pd.to_numeric(equipos['puntos_totales']).fillna(0)
-
+        # 1. Registrar en el historial
+        cursor.execute('''
+            INSERT INTO historial (equipo_id, descripcion, puntos_cambio)
+            SELECT id, ?, ? FROM equipos WHERE nombre = ?
+        ''', (descripcion, puntos, nombre_equipo))
+        
         # 2. Actualizar el total del equipo
-        equipos.loc[equipos['nombre'] == nombre_equipo, 'puntos_totales'] += puntos
+        cursor.execute('''
+            UPDATE equipos 
+            SET puntos_totales = puntos_totales + ? 
+            WHERE nombre = ?
+        ''', (puntos, nombre_equipo))
         
-        # 3. Preparar el nuevo registro
-        nuevo_log = pd.DataFrame([{
-            "equipo_nombre": str(nombre_equipo),
-            "descripcion": str(descripcion),
-            "puntos_cambio": int(puntos),
-            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }])
-        
-        # 4. Combinar con el historial existente
-        if historial.empty:
-            historial_actualizado = nuevo_log
-        else:
-            historial_actualizado = pd.concat([historial, nuevo_log], ignore_index=True)
-
-        # 5. Guardar cambios
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="equipos", data=equipos)
-        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="historial", data=historial_actualizado)
-        
+        conn.commit()
     except Exception as e:
-        st.error(f"Error al registrar puntos: {e}")
+        conn.rollback()
+        print(f"Error: {e}")
+    finally:
+        conn.close()
 
 def obtener_totales():
-    """Retorna los datos para el gráfico"""
-    try:
-        df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="equipos")
-        df['puntos_totales'] = pd.to_numeric(df['puntos_totales']).fillna(0)
-        return list(df.itertuples(index=False, name=None))
-    except Exception as e:
-        st.error(f"Error al obtener totales: {e}")
-        return []
-
-def obtener_historial_completo():
-    """Retorna todo el historial"""
-    try:
-        return conn.read(spreadsheet=SPREADSHEET_URL, worksheet="historial")
-    except Exception as e:
-        st.error(f"Error al obtener historial: {e}")
-        return pd.DataFrame()
+    """Función extra para facilitar la lectura en Streamlit"""
+    conn = sqlite3.connect('competencia.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT nombre, puntos_totales FROM equipos")
+    datos = cursor.fetchall()
+    conn.close()
+    return datos
