@@ -26,7 +26,7 @@ def inicializar_db():
     ''')
     
     # Insertar los 5 equipos iniciales si no existen
-    equipos = ['Escuderos', 'Templarios', 'Vikingos', 'Espartanos', 'Samuráis']
+    equipos = ['Escuderos', 'Templarios', 'Capes', 'Adalies', 'Herederas']
     for equipo in equipos:
         cursor.execute('INSERT OR IGNORE INTO equipos (nombre) VALUES (?)', (equipo,))
     

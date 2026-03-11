@@ -17,7 +17,7 @@ def inicializar_db():
     ejecutar_query('''CREATE TABLE IF NOT EXISTS historial 
                      (id INTEGER PRIMARY KEY, equipo_nombre TEXT, descripcion TEXT, puntos_cambio INTEGER)''', commit=True)
     
-    equipos = ['Escuderos', 'Templarios', 'Vikingos', 'Espartanos', 'Samuráis']
+    equipos = ['Escuderos', 'Templarios', 'Capes', 'Adalies', 'Herederas']
     for e in equipos:
         ejecutar_query('INSERT OR IGNORE INTO equipos (nombre, puntos_totales) VALUES (?, 0)', (e,), commit=True)
 
@@ -29,7 +29,7 @@ st.title("🏆 Sistema de Puntos de Competencia")
 
 # Sidebar para entradas
 st.sidebar.header("Registrar Nuevo Evento")
-equipo_sel = st.sidebar.selectbox("Selecciona Equipo", ['Escuderos', 'Templarios', 'Vikingos', 'Espartanos', 'Samuráis'])
+equipo_sel = st.sidebar.selectbox("Selecciona Equipo", ['Escuderos', 'Templarios', 'Capes', 'Adalies', 'Herederas'])
 desc = st.sidebar.text_input("Descripción del logro/falta")
 puntos = st.sidebar.number_input("Puntos", step=1, value=0)
 
