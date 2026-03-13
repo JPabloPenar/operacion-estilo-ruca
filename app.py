@@ -24,7 +24,7 @@ with st.sidebar:
     pts = st.number_input("Puntos", step=1, value=0)
     
     if st.button("Guardar"):
-        if password != st.secrets["admin_password"]:
+        if password != "SoyDeFORDOC":
             st.error("Contraseña incorrecta")
         elif not desc:
             st.warning("Debes escribir una descripción")
