@@ -63,3 +63,10 @@ def obtener_totales():
 def obtener_historial_completo():
     with engine.connect() as conn:
         return pd.read_sql("SELECT * FROM historial ORDER BY fecha DESC", conn)
+
+def reiniciar_datos():
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM historial"))
+        conn.execute(text("UPDATE equipos SET puntos_totales = 0"))
+
+reiniciar_datos()

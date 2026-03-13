@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from database import inicializar_db, registrar_puntos, obtener_totales, obtener_historial_completo
+from database import inicializar_db, registrar_puntos, obtener_totales, obtener_historial_completo, reiniciar_datos
 
 st.set_page_config(page_title="Operación Estilo Ruca", layout="wide")
 
