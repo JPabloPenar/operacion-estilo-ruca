@@ -69,4 +69,3 @@ def reiniciar_datos():
         conn.execute(text("DELETE FROM historial"))
         conn.execute(text("UPDATE equipos SET puntos_totales = 0"))
 
-reiniciar_datos()
