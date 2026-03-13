@@ -15,13 +15,20 @@ st.title("🏆 Operación Estilo Ruca")
 
 # Sidebar
 with st.sidebar:
+
+    password = st.text_input("Contraseña", type="password")
+
     st.header("Registrar Puntos")
     equipo = st.selectbox("Equipo", ['Escuderos', 'Templarios', 'Capes', 'Herederas', 'Adalies'])
     desc = st.text_input("Descripción")
     pts = st.number_input("Puntos", step=1, value=0)
     
     if st.button("Guardar"):
-        if desc:
+        if password != st.secrets["admin_password"]:
+            st.error("Contraseña incorrecta")
+        elif not desc:
+            st.warning("Debes escribir una descripción")
+        else:
             registrar_puntos(equipo, desc, pts)
             st.success("¡Registrado!")
             st.rerun()
