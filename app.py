@@ -13,7 +13,7 @@ except Exception as e:
     st.stop()
 
 # Título
-st.title("🏆 Operación Estilo Ruca")
+st.title("Operación Estilo Ruca")
 st.markdown("---")
 
 # Sidebar mejorado
