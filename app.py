@@ -43,8 +43,12 @@ with st.sidebar:
 # Obtener datos
 res = obtener_totales()
 
-if res:
-    df = pd.DataFrame(res, columns=["Equipo", "Puntos"])
+# Tabs
+t1, t2 = st.tabs(["📊 Gráfico", "📋 Historial"])
+
+with t1:
+    if res:
+        df = pd.DataFrame(res, columns=["Equipo", "Puntos"])
 
     # Layout en columnas
     col1, col2 = st.columns([2, 1])
@@ -76,15 +80,6 @@ if res:
     for i, row in df_sorted.iterrows():
         icon = medals[i] if i < 3 else "🏅"
         st.write(f"{icon} {row['Equipo']} — {row['Puntos']} pts")
-
-# Tabs
-t1, t2 = st.tabs(["📊 Gráfico", "📋 Historial"])
-
-with t1:
-    if res:
-        st.subheader("Vista general")
-        st.bar_chart(df.set_index("Equipo"))
-
 with t2:
     st.subheader("Historial de movimientos")
     df_h = obtener_historial_completo()
