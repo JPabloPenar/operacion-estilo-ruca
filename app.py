@@ -76,7 +76,7 @@ with t1:
     st.markdown("---")
 
     # Ranking
-    st.subheader("⚔ Ranking")
+    st.subheader("👑 Ranking")
     df_sorted = df.sort_values("Puntos", ascending=False).reset_index(drop=True)
 
     medals = ["🥇", "🥈", "🥉"]
