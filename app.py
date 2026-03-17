@@ -69,7 +69,7 @@ with t1:
         st.altair_chart(chart, use_container_width=True)
 
     with col2:
-        st.subheader("🏅 Equipo líder")
+        st.subheader("👑 Equipo líder")
         top = df.sort_values("Puntos", ascending=False).iloc[0]
         st.metric(label=top["Equipo"], value=top["Puntos"])
 
