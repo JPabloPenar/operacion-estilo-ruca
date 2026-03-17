@@ -3,7 +3,11 @@ import pandas as pd
 import altair as alt
 from database import inicializar_db, registrar_puntos, obtener_totales, obtener_historial_completo
 
-st.set_page_config(page_title="Operación Estilo Ruca", layout="wide")
+st.set_page_config(
+    page_title="Operación Estilo Ruca",
+    page_icon="logo.png",
+    layout="wide"
+)
 
 # Inicializar DB
 try:
@@ -13,7 +17,7 @@ except Exception as e:
     st.stop()
 
 # Título
-st.title("Operación Estilo Ruca")
+st.title("🏆 Operación Estilo Ruca")
 st.markdown("---")
 
 # Sidebar mejorado
@@ -72,7 +76,7 @@ with t1:
     st.markdown("---")
 
     # Ranking
-    st.subheader("🏆 Ranking")
+    st.subheader("⚔ Ranking")
     df_sorted = df.sort_values("Puntos", ascending=False).reset_index(drop=True)
 
     medals = ["🥇", "🥈", "🥉"]
