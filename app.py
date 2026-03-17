@@ -76,13 +76,13 @@ with t1:
     st.markdown("---")
 
     # Ranking
-    st.subheader("👑 Ranking")
+    st.subheader("🏅 Ranking")
     df_sorted = df.sort_values("Puntos", ascending=False).reset_index(drop=True)
 
     medals = ["🥇", "🥈", "🥉"]
 
     for i, row in df_sorted.iterrows():
-        icon = medals[i] if i < 3 else "🏅"
+        icon = medals[i] if i < 3 else " "
         st.write(f"{icon} {row['Equipo']} — {row['Puntos']} pts")
 with t2:
     st.subheader("Historial de movimientos")
