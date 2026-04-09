@@ -4,7 +4,7 @@ import altair as alt
 from database import inicializar_db, registrar_puntos, obtener_totales, obtener_historial_completo
 
 st.set_page_config(
-    page_title="Operación Estilo Ruca",
+    page_title="Copa Fidelitas",
     page_icon="logo.png",
     layout="wide"
 )
@@ -17,7 +17,7 @@ except Exception as e:
     st.stop()
 
 # Título
-st.title("🏆 Operación Estilo Ruca")
+st.title("🏆 Copa Fidelitas")
 st.markdown("---")
 
 # Sidebar mejorado
